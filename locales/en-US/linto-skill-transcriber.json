@@ -1,0 +1,19 @@
+{
+  "linto-skill-transcriber" : {
+    "label" :{
+      "name" : "Name",
+      "host" : "Host",
+      "filesize" : "File size (Mo)",
+      "action" : "Action",
+      "add": "Add",
+      "enable": "Enable",
+      "remove" : "Remove"
+    },
+    "placeholder" : {
+      "name" : "Node name",
+      "filesize": "500",
+      "action" : "Action name",
+      "host": "http://"
+    }
+  }
+}

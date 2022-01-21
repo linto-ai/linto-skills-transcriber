@@ -1,0 +1,18 @@
+{
+  "en-US": {
+    "say": {
+      "processingError": {
+        "phonetic": "Error while processing the request",
+        "text": "Error while processing the request"
+      }
+    }
+  },
+  "fr-FR": {
+    "say": {
+      "processingError": {
+        "phonetic": "Une erreur est survenue pendant l'exécution de la requête",
+        "text": "Une erreur est survenue pendant l'exécution de la requête"
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+<script type="text/x-red" data-template-name="linto-skill-transcriber">    
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="linto-skill-transcriber.label.name" /> </label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]linto-skill-transcriber.placeholder.name" />
+    </div>
+
+    <div class="form-row node-input-rule-container-row">
+        <ol id="node-input-rule-container"></ol>
+    </div>
+
+    <div class="form-row node-input-transcriber-container-row" style="margin-bottom:0px; width:100%; min-width:520px">
+        <label style="vertical-align:top;"><i class="fa fa-list-alt"></i> <span data-i18n="ui_form.label.formElements"></label>
+        <div style="display:inline-block; width:78%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+          <div class="red-ui-tray-header" style="width:100%; display: inline-block; padding-top:10px; padding-buttom:10px; border-top:0px solid; border-radius:5px 5px 0 0; border-bottom:1px solid #ccc;">
+              <div style="width:94%; display:inline-block; margin-left:27px">
+                <div style="width:25%; text-align:center; float:left;" data-i18n="linto-skill-transcriber.label.action"></span></div>
+                <div style="width:25%; text-align:center; float:left; margin-left:9px" data-i18n="linto-skill-transcriber.label.host"></div>
+                <div style="width:25%; text-align:center; float:left; margin-left:9px" data-i18n="linto-skill-transcriber.label.filesize"></div>
+                <div style="width:12%; text-align:center; float:left;"></div>
+              </div>
+          </div>
+          <div id="node-input-transcriber-container-div" style=" height: 257px; padding: 5px; overflow-y:scroll;">
+            <ol id="node-input-transcriber-container" style=" list-style-type:none; margin: 0;"></ol>
+          </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <a href="#" class="editor-button editor-button-small" id="node-input-add-transcriber" style="margin-top: 4px; margin-left: 103px;"><i class="fa fa-plus"></i> <span data-i18n="linto-skill-transcriber.label.add"></span></a>
+    </div>
+    
+
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('linto-skill-transcriber', {
+        defaults: {
+            name: {
+                value: ""
+            },
+            maxBufferSize:{
+                value : ""
+            },
+            transcriber: {value:[{action:"", host:"", filesize: ""}]}
+        },
+        ...RED.settings.lintoSkillTranscriber.template,
+
+        label: function () {
+            return this.name || "linto-skill-transcriber"
+        },
+        oneditprepare: function() {
+
+
+            function generateOption(i, option) {
+                var container = $('<li/>',{style:"margin:0; padding:8px 0px 0px; border-bottom:1px solid #ccc;"});
+                var row = $('<div/>').appendTo(container);
+                var row2 = $('<div/>',{style:"padding-top:5px; padding-left:175px;"}).appendTo(container);
+                var row3 = $('<div/>',{style:"padding-top:5px; padding-left:120px;"}).appendTo(container);
+                var actionField = $('<input/>',{class:"node-input-transcriber-action", type:"text", style:"margin-left:7px; width:25%;", placeholder: "Name", value:option.action}).appendTo(row);
+                var hostField = $('<input/>',{class:"node-input-transcriber-host", type:"text", style:"margin-left:7px; width:25%;", placeholder: "http://", value:option.host}).appendTo(row);
+                var sizeField = $('<input/>',{class:"node-input-transcriber-filesize", type:"number", style:"margin-left:7px; width:25%;", placeholder: "500", value:option.filesize}).appendTo(row);
+
+                var finalspan = $('<div/>',{style:"display:inline-block; width:5%;"}).appendTo(row);
+                var deleteButton = $('<a/>',{href:"#",class:"editor-button", style:"font-size:1.3em; left:45%; position:relative;"}).appendTo(finalspan);
+                $('<i/>',{class:"fa fa-trash-o"}).appendTo(deleteButton);
+
+                deleteButton.click(function() {
+                    container.find(".node-input-transcriber-host")
+                    container.css({"background":"#fee"});
+                    container.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                });
+                $("#node-input-transcriber-container").append(container);
+            }
+
+            $("#node-input-add-transcriber").click(function() {
+                generateOption($("#node-input-transcriber-container").children().length+1, {});
+                $("#node-input-transcriber-container-div").scrollTop($("#node-input-transcriber-container-div").get(0).scrollHeight);
+            });
+
+            for (var i=0; i<this.transcriber.length; i++) {
+                var option = this.transcriber[i];
+                generateOption(i+1,option);
+            }
+
+        },
+        oneditsave: function() {
+            var options = $("#node-input-transcriber-container").children();
+            var node = this;
+            node.transcriber = [];
+            node.formValue = {};
+            options.each(function(i) {
+                var option = $(this);
+                var o = {
+                    action: option.find(".node-input-transcriber-action").val(),
+                    host: option.find(".node-input-transcriber-host").val(),
+                    filesize: option.find(".node-input-transcriber-filesize").val(),
+                };
+                node.transcriber.push(o);
+            });
+        }
+    })
+</script>

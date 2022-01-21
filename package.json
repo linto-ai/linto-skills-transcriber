@@ -1,0 +1,25 @@
+{
+  "name": "@linto-ai/linto-skill-transcriber",
+  "version": "0.0.1-2",
+  "description": "Allow to transcribe file",
+  "author": "yhoupert@linagora.com",
+  "license": "AGPL-3.0-or-later",
+  "node-red": {
+    "nodes": {
+      "linto-skill-transcriber": "linto-skill-transcriber.js"
+    }
+  },
+  "dependencies": {
+    "@linto-ai/linto-components": "latest",
+    "debug": "^4.1.1"
+  },
+  "homepage": "https://linto.ai/",
+  "directories": {
+    "linto": "linto"
+  },
+  "keywords": [
+    "linto",
+    "node-red",
+    "example"
+  ]
+}
