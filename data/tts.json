@@ -4,6 +4,14 @@
       "processingError": {
         "phonetic": "Error while processing the request",
         "text": "Error while processing the request"
+      },
+      "missingParameter":{
+        "phonetic": "Missing parameter",
+        "text": "Missing parameter"
+      },
+      "missingParameterHost":{
+        "phonetic": "Missing parameter host",
+        "text": "Missing parameter host"
       }
     }
   },
@@ -12,6 +20,14 @@
       "processingError": {
         "phonetic": "Une erreur est survenue pendant l'exécution de la requête",
         "text": "Une erreur est survenue pendant l'exécution de la requête"
+      },
+      "missingParameter" :{
+        "phonetic": "Paramètre manquant",
+        "text": "Paramètre manquant"
+      },
+      "missingParameterHost":{
+        "phonetic": "Paramètre manquant host",
+        "text": "Paramètre manquant host"
       }
     }
   }
