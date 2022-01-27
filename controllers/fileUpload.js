@@ -5,30 +5,39 @@ const BYTE_SIZE = 1024
 const REQUEST_ACCEPT_FORMAT = ['application/json', 'text/plain', 'text/vtt', 'text/srt']
 const DEFAULT_MEDIA_TYPE = 'audio/wav'
 
+const DEFAULT_OPTION = {
+  headers : {
+    accept : REQUEST_ACCEPT_FORMAT[0]
+  }
+}
+
 let jobsInterval = {}
-//state : diarization, transcription, punctuation, error, (pending, unknown, done) => untill one of them
-// done -> create path /result 
 
 module.exports = async function (msg, conf) {
-  const audio = msg.payload.audio
-  if (audio) {
-    delete msg.payload.audio
-    
-    const file = createFile(audio, conf.filesize)
-    if (Buffer.isBuffer(file.value)) {
-      const options = prepareRequest(file, msg.payload)
+  try{
+    if (msg.payload.audio) {
+      const audio = msg.payload.audio
+      delete msg.payload.audio
 
-      let transcriptResult = await this.request.post(conf.host + '/transcribe', options)
-      let result = wrapperLinstt.call(this, transcriptResult, options, msg)
+      const file = createFile(audio, conf.filesize)
+      if (Buffer.isBuffer(file.value)) {
+        const options = prepareRequest(file, msg.payload)
 
-      if(result.jobId){
-        jobsInterval[result.jobId] = setInterval(createJobInterval.bind(this, msg, result.jobId, conf, options), 1000)
+        let transcriptResult = await this.request.post(conf.host + '/transcribe', options)
+        let result = wrapperLinstt.call(this, transcriptResult, options, msg)
+
+        if(options.formData.force_sync === 'false' && result.jobId){
+          jobsInterval[result.jobId] = setInterval(createJobInterval.bind(this, msg, result.jobId, conf), 1000)
+        }
+
+        return result
       }
+    }else
+      return {error:'Input should containt an audio buffer'}
+  }catch(err){
+    return { error : err.message}
 
-      return result
-    }
-  }else 
-    return {error:'Input should containt an audio buffer'}
+  }
 }
 
 function createFile(audio, maxBufferSize){
@@ -69,7 +78,7 @@ function prepareRequest(file, payload) {
     }
   }
 
-  if(payload.accept && payload.accept === REQUEST_ACCEPT_FORMAT.indexOf(payload.accept) > -1)
+  if(payload.accept && REQUEST_ACCEPT_FORMAT.indexOf(payload.accept) > -1)
     options.headers.accept = payload.accept
   else 
     options.headers.accept = REQUEST_ACCEPT_FORMAT[0] // By default application/json
@@ -82,61 +91,57 @@ function prepareRequest(file, payload) {
   else
     options.formData.force_sync = 'false'
 
-  //TODO: NEED TO BE REMOVE
-  options.formData.no_cache = 'true'
+  if(payload.no_cache)
+    options.formData.no_cache = payload.no_cache
+  else
+    options.formData.no_cache = 'true'
 
   return options
 }
 
-function wrapperLinstt(transcript, options, msg) {
+function wrapperLinstt(transcript, options) {
   let output = {}
-  if (options.headers.accept === 'application/json') {
+
+  if (options.headers.accept === 'application/json') { // application/json
     let json = JSON.parse(transcript)
 
-    if(options.formData.force_sync === 'false' && json.raw_transcription === undefined){
-      output.jobId = json.jobid //Manage pulling from here ?
-    }else {
-      if (!json || json.transcription_result.length === 0) 
+    if(options.formData.force_sync === 'false'){
+      output.jobId = json.jobid
+    } else {
+      if (!json)
         throw new Error('Transcription was empty')
-      
-      output.transcript = {}
-      output.transcript.text = json.transcription_result
-      output.transcript.confidenceScore = json.confidence  
-
-      const transcriptionConfig = JSON.parse(options.formData.transcriptionConfig)
-      if(transcriptionConfig.diarizationConfig.enableDiarization === true)
-        output.transcript.segments = json.segments
+      return json
     }
-  } else {
-    if (transcript.toString('utf8').text === undefined ||  transcript.toString('utf8').length === 0) 
+  } else { // Text plain
+    if (transcript === undefined ||  transcript.length === 0)
       throw new Error('Transcription was empty')
-
-    output.transcript.text = {}
-    output.text = transcript.toString('utf8')
+    else if(options.formData.force_sync === 'false')
+      output.jobId = transcript
+    else {
+      output.transcript = {
+        text : transcript
+      }
+    }
   }
-
   return output
 }
 
-async function createJobInterval(msg, jobId, conf, requestOption){
+async function createJobInterval(msg, jobId, conf){
   try{
-    const url = `${conf.host}/job/${jobId}` 
-    const options = {
-      headers : requestOption.headers
-    }
+    let jobs = {}
+    jobs.str = await this.request.get(`${conf.host}/job/${jobId}` , DEFAULT_OPTION, jobsHandler)
+    jobs.json = JSON.parse(jobs.str)
     
-    const strResult = await this.request.get(url, options, jobsHandler)
-    const jsonResult = JSON.parse(strResult)
-    if(jsonResult.progress === undefined){
-      msg.payload.behavior = jsonResult
+    if(jobs.json.state === 'done' && jobs.json.result_id){  //triger last request
+        msg.payload.behavior = { ...jobs.json, job_id : jobId}
       this.wireEvent.notifyOut(this.node.z, msg)
-
       clearInterval(jobsInterval[jobId])
       delete jobsInterval[jobId]
     }else {
-      msg.payload.behavior = { ...jsonResult, job_id : jobId }
+      msg.payload.behavior = { ...jobs.json, job_id : jobId }
       this.wireEvent.notifyOut(this.node.z, msg)
     }
+
   }catch(err){
     msg.payload.behavior = { error : err.message }
     this.wireEvent.notifyOut(this.node.z, msg)

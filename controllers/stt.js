@@ -11,6 +11,8 @@ module.exports = async function (msg) {
       return await this.controller.fileUpload(msg, actionConf)
     else if(msg.payload.job_id)
       return await this.controller.jobs(msg, actionConf)
+    else if(msg.payload.result_id)
+      return await this.controller.results(msg, actionConf)
     else
       return { error: tts.say.missingParameter.text }
   } catch (err) {

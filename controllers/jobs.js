@@ -1,12 +1,12 @@
 const debug = require('debug')(`linto:skill:v2:linto-skill:transcribe:controllers:jobs`)
+const DEFAULT_OPTION = {
+  headers : { accept : 'application/json'}
+}
 
 module.exports = async function (msg) {
   const url = `${conf.host}/job/${msg.payload.job_id}` 
-  const options = {
-    headers : { accept : 'application/json'},
-  }
-  
-  let jobsResult = await this.request.get(url, options, jobsHandler)
+
+  let jobsResult = await this.request.get(url, DEFAULT_OPTION, jobsHandler)
   return {
     jobs: jobsResult
   }
