@@ -16,13 +16,22 @@ module.exports = async function (msg, conf) {
 
     const result = await this.request.get(url, options, resultHandler)
 
-    if(options.headers.accept === 'application/json'){
-      return JSON.parse(result)
+    let json = {
+      state : 'result_received',
+      type : options.headers.accept
     }
-    return result
+    if(options.headers.accept === 'application/json'){
+      json.result = JSON.parse(result)
+    }else {
+      json.result = result
+    }
 
+    return json
   }catch(err){
-    throw new Error('Service error')
+    return {
+      state : 'error',
+      error : err.message
+    }
   }
 }
 

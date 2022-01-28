@@ -4,7 +4,7 @@ const DEFAULT_MAX_SIZE_FILE = 10  // Mo
 const BYTE_SIZE = 1024
 const REQUEST_ACCEPT_FORMAT = ['application/json', 'text/plain', 'text/vtt', 'text/srt']
 const DEFAULT_MEDIA_TYPE = 'audio/wav'
-
+const DEFAULT_INTERVAL_TIMER = 1000 //ms
 const DEFAULT_OPTION = {
   headers : {
     accept : REQUEST_ACCEPT_FORMAT[0]
@@ -27,7 +27,10 @@ module.exports = async function (msg, conf) {
         let result = wrapperLinstt.call(this, transcriptResult, options, msg)
 
         if(options.formData.force_sync === 'false' && result.jobId){
-          jobsInterval[result.jobId] = setInterval(createJobInterval.bind(this, msg, result.jobId, conf), 1000)
+          let interval = DEFAULT_INTERVAL_TIMER
+          if (conf.interval && isNumeric(conf.interval)) interval = conf.interval
+
+          jobsInterval[result.jobId] = setInterval(createJobInterval.bind(this, msg, result.jobId, conf), interval)
         }
 
         return result
@@ -35,8 +38,10 @@ module.exports = async function (msg, conf) {
     }else
       return {error:'Input should containt an audio buffer'}
   }catch(err){
-    return { error : err.message}
-
+    return {
+      state : 'error',
+      error : err.message
+    }
   }
 }
 
@@ -67,6 +72,7 @@ function createFile(audio, maxBufferSize){
   if((maxBufferSize - bufferMoSize ) > 0)
     return file
 
+
   throw new Error('File is to big')
 }
 
@@ -90,11 +96,6 @@ function prepareRequest(file, payload) {
     options.formData.force_sync = payload.force_sync
   else
     options.formData.force_sync = 'false'
-
-  if(payload.no_cache)
-    options.formData.no_cache = payload.no_cache
-  else
-    options.formData.no_cache = 'true'
 
   return options
 }

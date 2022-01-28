@@ -7,12 +7,14 @@
       "action" : "Action",
       "add": "Add",
       "enable": "Enable",
+      "interval" : "Interval (Ms)",
       "remove" : "Remove"
     },
     "placeholder" : {
       "name" : "Node name",
       "filesize": "500",
       "action" : "Action name",
+      "interval": "1000",
       "host": "http://"
     }
   }
