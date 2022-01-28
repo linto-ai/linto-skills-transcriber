@@ -99,27 +99,29 @@ function prepareRequest(file, payload) {
   return options
 }
 
-function wrapperLinstt(transcript, options) {
+function wrapperLinstt(transcriptionResult, options) {
   let output = {}
 
   if (options.headers.accept === 'application/json') { // application/json
-    let json = JSON.parse(transcript)
+    let json = JSON.parse(transcriptionResult)
 
     if(options.formData.force_sync === 'false'){
       output.jobId = json.jobid
+      output.state = 'file_uploaded'
     } else {
       if (!json)
         throw new Error('Transcription was empty')
       return json
     }
   } else { // Text plain
-    if (transcript === undefined ||  transcript.length === 0)
+    if (transcriptionResult === undefined ||  transcriptionResult.length === 0)
       throw new Error('Transcription was empty')
-    else if(options.formData.force_sync === 'false')
-      output.jobId = transcript
-    else {
+    else if(options.formData.force_sync === 'false'){
+      output.jobId = transcriptionResult
+      output.state = 'file_uploaded'
+    }else {
       output.transcript = {
-        text : transcript
+        text : transcriptionResult
       }
     }
   }
